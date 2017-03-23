@@ -12,24 +12,40 @@ function add_ssh_public_key() {
 
 function get_network_info() {
     echo '* settings for cloud agent'
-    read -p ' hostname   (ex:cloudstack)   : ' HOSTNAME
-    read -p ' ip address (ex:192.168.1.2)  : ' IPADDR
-    read -p ' netmask    (ex:255.255.255.0): ' NETMASK
-    read -p ' gateway    (ex:192.168.1.1)  : ' GATEWAY
-    read -p ' dns1       (ex:192.168.1.1)  : ' DNS1
-    read -p ' dns2       (ex:8.8.4.4)      : ' DNS2
+    #read -p ' hostname   (ex:cloudstack)   : ' HOSTNAME
+    #read -p ' ip address (ex:192.168.1.2)  : ' IPADDR
+    #read -p ' netmask    (ex:255.255.255.0): ' NETMASK
+    #read -p ' gateway    (ex:192.168.1.1)  : ' GATEWAY
+    #read -p ' dns1       (ex:192.168.1.1)  : ' DNS1
+    #read -p ' dns2       (ex:8.8.4.4)      : ' DNS2
+    HOSTANME="oudswiss packer-templates"
+    GATEWAY="$(route | grep default | awk '{print $2}')"
+    IPADRR="$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}')"
+    NETMASK="255.255.255.0"
+    DNS1="8.8.8.8"
+    DNS2="8.8.8.8"
+    
+
+
+
+
 }
 
 function get_nfs_info() {
     echo '* settings for nfs server'
-    read -p ' NFS Server IP: ' NFS_SERVER_IP
-    read -p ' Primary mount point   (ex:/export/primary)  : ' NFS_SERVER_PRIMARY
-    read -p ' Secondary mount point (ex:/export/secondary): ' NFS_SERVER_SECONDARY
+    #read -p ' NFS Server IP: ' NFS_SERVER_IP
+    #read -p ' Primary mount point   (ex:/export/primary)  : ' NFS_SERVER_PRIMARY
+    #read -p ' Secondary mount point (ex:/export/secondary): ' NFS_SERVER_SECONDARY
+    NFS_SERVER_PRIMARY=/export/primary
+    NFS_SERVER_SECONDARY=/export/primary
+    NFS_SERVER_IP="$(IPADRR)"
+
 }
 
 function get_nfs_network() {
     echo '* settings for nfs server'
-    read -p ' accept access from (ex:192.168.1.0/24): ' NETWORK
+    #read -p ' accept access from (ex:192.168.1.0/24): ' NETWORK
+    NETWORK="0.0.0.0/0"
 }
 
 function install_common() {
@@ -38,7 +54,7 @@ function install_common() {
     setenforce permissive
     echo "[cloudstack]
 name=cloudstack
-baseurl=http://cloudstack.apt-get.eu/rhel/4.5/
+baseurl=http://http://packages.shapeblue.com/cloudstack/upstream/centos/4.8
 enabled=1
 gpgcheck=0" > /etc/yum.repos.d/CloudStack.repo
     sed -i -e "s/localhost/$HOSTNAME localhost/" /etc/hosts
@@ -46,8 +62,8 @@ gpgcheck=0" > /etc/yum.repos.d/CloudStack.repo
     service ntpd start
     chkconfig ntpd on
     wget http://download.cloud.com.s3.amazonaws.com/tools/vhd-util
-    mkdir -p /usr/share/cloudstack-common/common/scripts/vm/hypervisor/xenserver
-    mv vhd-util /usr/share/cloudstack-common/common/scripts/vm/hypervisor/xenserver
+    #mkdir -p /usr/share/cloudstack-common/common/scripts/vm/hypervisor/xenserver
+    #mv vhd-util /usr/share/cloudstack-common/common/scripts/vm/hypervisor/xenserver
 }
 
 function install_management() {
