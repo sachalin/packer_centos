@@ -14,7 +14,7 @@ function get_network_info() {
     echo '* settings for cloud agent'
     HOSTANME="oudswiss packer-templates"
     GATEWAY="172.16.107.2"
-    IPADRR="172.16.107.132"
+    IPADRR="172.16.107.128"
     NETMASK="255.255.255.0"
     DNS1="8.8.8.8"
     DNS2="8.8.8.8"
@@ -148,7 +148,7 @@ STATD_OUTGOING_PORT=2020" >> /etc/sysconfig/nfs
     get_nfs_info
     add_ssh_public_key
     install_common
-   # set_ip
+    set_ip
     install_nfs
     install_management
     initialize_storage
