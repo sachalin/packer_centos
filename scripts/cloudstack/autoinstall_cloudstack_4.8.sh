@@ -12,12 +12,12 @@ function add_ssh_public_key() {
 
 function get_network_info() {
     echo '* settings for cloud agent'
-    HOSTANME="oudswiss packer-templates"
+    HOSTENAME="cloudstack"
     GATEWAY="172.16.107.2"
     IPADRR="172.16.107.128"
     NETMASK="255.255.255.0"
-    DNS1="8.8.8.8"
-    DNS2="8.8.8.8"
+    DOAMAIN="localhost"
+    DNS1="172.16.107.2"
 }
 
 function get_nfs_info() {
@@ -119,10 +119,14 @@ function set_ip() {
 HWADDR=$HWADDR
 NM_CONTROLLED=no
 ONBOOT=yes
-IPADDR=$IPADDR
+HOSTANME=$HOSTNAME
+IPADDR=$IPADRR
 NETMASK=$NETMASK
 GATEWAY=$GATEWAY
 DNS1=$DNS1" > /etc/sysconfig/network-scripts/ifcfg-eth0
+echo " $IPADRR	$HOSTANME	$HOSTANME.$DOMAIN" >> /etc/hosts
+echo "search $DOMAIN
+nameserver $DNS1" > /etc/resolv.conf
 }
 
 function install_nfs() {
@@ -146,9 +150,9 @@ STATD_OUTGOING_PORT=2020" >> /etc/sysconfig/nfs
     get_network_info
     get_nfs_network
     get_nfs_info
-    add_ssh_public_key
-    install_common
+    #add_ssh_public_key
     set_ip
+    install_common
     install_nfs
     install_management
     initialize_storage
