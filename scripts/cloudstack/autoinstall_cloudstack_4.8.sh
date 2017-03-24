@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 set -x
-
+sudo su 
 SSH_PUBLIC_KEY='insert_your_ssh_public_key_here'
 VERSION="4.8"
 function add_ssh_public_key() {
