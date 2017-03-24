@@ -1,7 +1,5 @@
 #!/bin/sh
-set -e
-set -x
-sudo su 
+ sudo su 
 SSH_PUBLIC_KEY='insert_your_ssh_public_key_here'
 VERSION="4.8"
 function add_ssh_public_key() {
@@ -35,37 +33,37 @@ function get_nfs_network() {
 }
 
 function install_common() {
-    sudo yum update -y
-    sudo sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
-    sudo setenforce permissive
-    sudo echo "[cloudstack]
+     yum update -y
+     sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+     setenforce permissive
+     echo "[cloudstack]
 name=cloudstack
 baseurl=http://packages.shapeblue.com/cloudstack/upstream/centos/$VERSION
 enabled=1
 gpgcheck=0" > /etc/yum.repos.d/CloudStack.repo
-    sudo yum install ntp wget -y
-    sudo service ntpd start
-    sudo chkconfig ntpd on
+     yum install ntp wget -y
+     service ntpd start
+     chkconfig ntpd on
 }
 
 function install_management() {
-    sudo yum install cloudstack-management mysql-server expect -y
+     yum install cloudstack-management mysql-server expect -y
 
-    sudo head -7 /etc/my.cnf > /tmp/before
-    sudo tail -n +7 /etc/my.cnf > /tmp/after
-    sudo cat /tmp/before > /etc/my.cnf
-    sudo echo "innodb_rollback_on_timeout=1
+     head -7 /etc/my.cnf > /tmp/before
+     tail -n +7 /etc/my.cnf > /tmp/after
+     cat /tmp/before > /etc/my.cnf
+     echo "innodb_rollback_on_timeout=1
 innodb_lock_wait_timeout=600
 max_connections=350
 log-bin=mysql-bin
 binlog-format = 'ROW'" >> /etc/my.cnf
-    sudo cat /tmp/after >> /etc/my.cnf
-    sudo rm -rf /tmp/before /tmp/after
+     cat /tmp/after >> /etc/my.cnf
+     rm -rf /tmp/before /tmp/after
 
-    sudo service mysqld start
-    sudo chkconfig mysqld on
+     service mysqld start
+     chkconfig mysqld on
 
-    sudo expect -c "
+     expect -c "
 set timeout 10
 spawn mysql_secure_installation
 expect \"Enter current password for root (enter for none): \"
@@ -86,37 +84,37 @@ expect \"Reload privilege tables now?\"
 send \"Y\n\"
 interact
 "
-    sudo cloudstack-setup-databases cloud:password@localhost --deploy-as=root:password
-    sudo echo "Defaults:cloud !requiretty" >> /etc/sudoers
-    sudo cloudstack-setup-management
-    sudo chkconfig cloudstack-management on
-    sudo chown cloud:cloud /var/log/cloudstack/management/catalina.out
+     cloudstack-setup-databases cloud:password@localhost --deploy-as=root:password
+     echo "Defaults:cloud !requiretty" >> /etc/ers
+     cloudstack-setup-management
+     chkconfig cloudstack-management on
+     chown cloud:cloud /var/log/cloudstack/management/catalina.out
 }
 
 function initialize_storage() {
-    sudo service rpcbind start
-    sudo chkconfig rpcbind on
-    sudo service nfs start
-    sudo chkconfig nfs on
-    sudo mkdir -p /mnt/primary
-    sudo mkdir -p /mnt/secondary
-    sudo mount -t nfs ${NFS_SERVER_IP}:${NFS_SERVER_PRIMARY} /mnt/primary
+     service rpcbind start
+     chkconfig rpcbind on
+     service nfs start
+     chkconfig nfs on
+     mkdir -p /mnt/primary
+     mkdir -p /mnt/secondary
+     mount -t nfs ${NFS_SERVER_IP}:${NFS_SERVER_PRIMARY} /mnt/primary
     sleep 10
-    sudo mount -t nfs ${NFS_SERVER_IP}:${NFS_SERVER_SECONDARY} /mnt/secondary
+     mount -t nfs ${NFS_SERVER_IP}:${NFS_SERVER_SECONDARY} /mnt/secondary
     sleep 10
-    sudo rm -rf /mnt/primary/*
-    sudo rm -rf /mnt/secondary/*
-    sudo /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secondary -u http://cloudstack.apt-get.eu/systemvm/4.6/systemvm64template-4.6.0-vmware.ova -h vmware -F
+     rm -rf /mnt/primary/*
+     rm -rf /mnt/secondary/*
+     /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secondary -u http://cloudstack.apt-get.eu/systemvm/4.6/systemvm64template-4.6.0-vmware.ova -h vmware -F
     sync
-    sudo umount /mnt/primary
-    sudo umount /mnt/secondary
-    sudo rmdir /mnt/primary
-    sudo rmdir /mnt/secondary
+     umount /mnt/primary
+     umount /mnt/secondary
+     rmdir /mnt/primary
+     rmdir /mnt/secondary
 }
 
 function set_ip() {
     HWADDR=`grep HWADDR /etc/sysconfig/network-scripts/ifcfg-eth0 | awk -F '"' '{print $2}'`
-    sudo echo "DEVICE=eth0
+     echo "DEVICE=eth0
 HWADDR=$HWADDR
 NM_CONTROLLED=no
 ONBOOT=yes
@@ -125,27 +123,27 @@ IPADDR=$IPADRR
 NETMASK=$NETMASK
 GATEWAY=$GATEWAY
 DNS1=$DNS1" > /etc/sysconfig/network-scripts/ifcfg-eth0
-sudo hostname $HOSTNAME
-sudo echo "$IPADRR	$HOSTNAME	$HOSTNAME.$DOMAIN" >> /etc/hosts
-sudo echo "search $DOMAIN
+ hostname $HOSTNAME
+ echo "$IPADRR	$HOSTNAME	$HOSTNAME.$DOMAIN" >> /etc/hosts
+ echo "search $DOMAIN
 nameserver $DNS1" > /etc/resolv.conf
-sudo service iptables stop
-sudo chkconfig iptables off
-sudo service network restart
+ service iptables stop
+ chkconfig iptables off
+ service network restart
 }
 
 function install_nfs() {
-    sudo yum install nfs-utils -y
-    sudo service rpcbind start
-    sudo chkconfig rpcbind on
-    sudo service nfs start
-    sudo chkconfig nfs on
-    sudo mkdir -p $NFS_SERVER_PRIMARY
-    sudo mkdir -p $NFS_SERVER_SECONDARY
-    sudo echo "$NFS_SERVER_PRIMARY   *(rw,async,no_root_squash)" >  /etc/exports
-    sudo echo "$NFS_SERVER_SECONDARY *(rw,async,no_root_squash)" >> /etc/exports
-    sudo exportfs -a
-    sudo echo "LOCKD_TCPPORT=32803
+     yum install nfs-utils -y
+     service rpcbind start
+     chkconfig rpcbind on
+     service nfs start
+     chkconfig nfs on
+     mkdir -p $NFS_SERVER_PRIMARY
+     mkdir -p $NFS_SERVER_SECONDARY
+     echo "$NFS_SERVER_PRIMARY   *(rw,async,no_root_squash)" >  /etc/exports
+     echo "$NFS_SERVER_SECONDARY *(rw,async,no_root_squash)" >> /etc/exports
+     exportfs -a
+     echo "LOCKD_TCPPORT=32803
 LOCKD_UDPPORT=32769
 MOUNTD_PORT=892
 RQUOTAD_PORT=875
