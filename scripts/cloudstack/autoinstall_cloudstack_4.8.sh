@@ -1,4 +1,6 @@
 #!/bin/sh
+set -e
+set -x
 
 SSH_PUBLIC_KEY='insert_your_ssh_public_key_here'
 VERSION="4.8"
