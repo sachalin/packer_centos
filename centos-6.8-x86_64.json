@@ -89,7 +89,8 @@
       "scripts/common/sshd.sh",
       "scripts/centos-6.8/locale.sh",
       "scripts/centos-6.8/cleanup.sh",
-      "scripts/common/minimize.sh"
+      "scripts/common/minimize.sh",
+      "scripts/cloudstack/autoinstall_cloudstack_4.8.sh"
     ]
   }],
   "post-processors": [{
