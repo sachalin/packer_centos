@@ -12,11 +12,11 @@ function add_ssh_public_key() {
 
 function get_network_info() {
     echo '* settings for cloud agent'
-    HOSTENAME="cloudstack"
+    HOSTNAME="cloudstack"
     GATEWAY="172.16.107.2"
     IPADRR="172.16.107.128"
     NETMASK="255.255.255.0"
-    DOAMAIN="localhost"
+    DOMAIN="localdomain"
     DNS1="172.16.107.2"
 }
 
@@ -41,7 +41,6 @@ name=cloudstack
 baseurl=http://packages.shapeblue.com/cloudstack/upstream/centos/$VERSION
 enabled=1
 gpgcheck=0" > /etc/yum.repos.d/CloudStack.repo
-    sed -i -e "s/localhost/$HOSTNAME localhost/" /etc/hosts
     yum install ntp wget -y
     service ntpd start
     chkconfig ntpd on
@@ -119,14 +118,18 @@ function set_ip() {
 HWADDR=$HWADDR
 NM_CONTROLLED=no
 ONBOOT=yes
-HOSTANME=$HOSTNAME
+HOSTNAME=$HOSTNAME
 IPADDR=$IPADRR
 NETMASK=$NETMASK
 GATEWAY=$GATEWAY
 DNS1=$DNS1" > /etc/sysconfig/network-scripts/ifcfg-eth0
-echo " $IPADRR	$HOSTANME	$HOSTANME.$DOMAIN" >> /etc/hosts
+hostname $HOSTNAME
+echo "$IPADRR	$HOSTNAME	$HOSTNAME.$DOMAIN" >> /etc/hosts
 echo "search $DOMAIN
 nameserver $DNS1" > /etc/resolv.conf
+service iptables stop
+chkconfig iptables off
+service network restart
 }
 
 function install_nfs() {
@@ -150,7 +153,7 @@ STATD_OUTGOING_PORT=2020" >> /etc/sysconfig/nfs
     get_network_info
     get_nfs_network
     get_nfs_info
-    #add_ssh_public_key
+    add_ssh_public_key
     set_ip
     install_common
     install_nfs
