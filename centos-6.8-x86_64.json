@@ -87,10 +87,10 @@
       "scripts/centos-6.8/init.sh",
       "scripts/common/vagrant.sh",
       "scripts/common/sshd.sh",
+      "scripts/cloudstack/autoinstall_cloudstack_4.8.sh",
       "scripts/centos-6.8/locale.sh",
       "scripts/centos-6.8/cleanup.sh",
-      "scripts/common/minimize.sh",
-      "scripts/cloudstack/autoinstall_cloudstack_4.8.sh"
+      "scripts/common/minimize.sh"
     ]
   }],
   "post-processors": [{
