@@ -1,7 +1,7 @@
 #!/bin/sh
 
 SSH_PUBLIC_KEY='insert_your_ssh_public_key_here'
-
+VERSION="4.8"
 function add_ssh_public_key() {
     cd
     mkdir -p .ssh
@@ -19,16 +19,11 @@ function get_network_info() {
     #read -p ' dns1       (ex:192.168.1.1)  : ' DNS1
     #read -p ' dns2       (ex:8.8.4.4)      : ' DNS2
     HOSTANME="oudswiss packer-templates"
-    GATEWAY="$(route | grep default | awk '{print $2}')"
-    IPADRR="$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}')"
+    GATEWAY="172.16.107.2"
+    IPADRR="172.16.107.150"
     NETMASK="255.255.255.0"
     DNS1="8.8.8.8"
     DNS2="8.8.8.8"
-    
-
-
-
-
 }
 
 function get_nfs_info() {
@@ -38,8 +33,7 @@ function get_nfs_info() {
     #read -p ' Secondary mount point (ex:/export/secondary): ' NFS_SERVER_SECONDARY
     NFS_SERVER_PRIMARY=/export/primary
     NFS_SERVER_SECONDARY=/export/primary
-    NFS_SERVER_IP="$(IPADRR)"
-
+    NFS_SERVER_IP="$IPADRR"
 }
 
 function get_nfs_network() {
@@ -54,14 +48,14 @@ function install_common() {
     setenforce permissive
     echo "[cloudstack]
 name=cloudstack
-baseurl=http://http://packages.shapeblue.com/cloudstack/upstream/centos/4.8
+baseurl=http://http://packages.shapeblue.com/cloudstack/upstream/centos/$VERSION
 enabled=1
 gpgcheck=0" > /etc/yum.repos.d/CloudStack.repo
     sed -i -e "s/localhost/$HOSTNAME localhost/" /etc/hosts
     yum install ntp wget -y
     service ntpd start
     chkconfig ntpd on
-    wget http://download.cloud.com.s3.amazonaws.com/tools/vhd-util
+    #wget http://download.cloud.com.s3.amazonaws.com/tools/vhd-util
     #mkdir -p /usr/share/cloudstack-common/common/scripts/vm/hypervisor/xenserver
     #mv vhd-util /usr/share/cloudstack-common/common/scripts/vm/hypervisor/xenserver
 }
@@ -124,7 +118,7 @@ function initialize_storage() {
     sleep 10
     rm -rf /mnt/primary/*
     rm -rf /mnt/secondary/*
-    /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secondary -u http://cloudstack.apt-get.eu/systemvm/4.5/systemvm64template-4.5-kvm.qcow2.bz2 -h kvm -F
+    /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secondary -u http://cloudstack.apt-get.eu/systemvm/4.6/systemvm64template-4.6.0-vmware.ova -h vmware -F
     sync
     umount /mnt/primary
     umount /mnt/secondary
@@ -216,74 +210,16 @@ STATD_OUTGOING_PORT=2020" >> /etc/sysconfig/nfs
     service iptables save
 
 }
-
-if [ $# -eq 0 ]
-then
-    OPT_ERROR=1
-fi
-
-while getopts "acnmhr" flag; do
-    case $flag in
-    \?) OPT_ERROR=1; break;;
-    h) OPT_ERROR=1; break;;
-    a) opt_agent=true;;
-    c) opt_common=true;;
-    n) opt_nfs=true;;
-    m) opt_management=true;;
-    r) opt_reboot=true;;
-    esac
-done
-
-shift $(( $OPTIND - 1 ))
-
-if [ $OPT_ERROR ]
-then
-    echo >&2 "usage: $0 [-cnamhr]
-  -c : install common packages
-  -n : install nfs server
-  -a : install cloud agent
-  -m : install management server
-  -h : show this help
-  -r : reboot after installation"
-    exit 1
-fi
-
-if [ "$opt_agent" = "true" ]
-then
     get_network_info
-fi
-if [ "$opt_nfs" = "true" ]
-then
     get_nfs_network
-fi
-if [ "$opt_management" = "true" ]
-then
     get_nfs_info
-fi
-
-
-if [ "$opt_common" = "true" ]
-then
     add_ssh_public_key
     install_common
-fi
-if [ "$opt_agent" = "true" ]
-then
-    install_agent
-fi
-if [ "$opt_nfs" = "true" ]
-then
+    #install_agent
     install_nfs
-fi
-if [ "$opt_management" = "true" ]
-then
     install_management
     initialize_storage
-fi
-if [ "$opt_reboot" = "true" ]
-then
     sync
     sync
     sync
     reboot
-fi
