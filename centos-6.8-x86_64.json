@@ -59,6 +59,7 @@
     "output_directory": "output-centos-6.8-x86_64-{{build_type}}",
     "vm_name": "packer-centos-6.8-x86_64",
     "disk_size": "{{user `disk_size`}}",
+    "disk_type_id": "0",
     "headless": "{{user `headless`}}",
     "http_directory": "http",
     "boot_wait": "5s",
