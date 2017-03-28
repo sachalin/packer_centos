@@ -1,7 +1,8 @@
 #!/bin/sh
- sudo su 
 SSH_PUBLIC_KEY='insert_your_ssh_public_key_here'
-VERSION="4.8"
+VERSION="4.9"
+RELEASERVER=6
+BASESEARCH="x86_64"
 function add_ssh_public_key() {
     cd
     mkdir -p .ssh
@@ -13,11 +14,11 @@ function add_ssh_public_key() {
 function get_network_info() {
     echo '* settings for cloud agent'
     HOSTNAME="cloudstack"
-    GATEWAY="172.16.107.2"
-    IPADRR="172.16.107.128"
+    GATEWAY="10.0.0.1"
+    IPADRR="10.0.0.211"
     NETMASK="255.255.255.0"
-    DOMAIN="localdomain"
-    DNS1="172.16.107.2"
+    DOMAIN="apalia.local"
+    DNS1="10.0.0.254"
 }
 
 function get_nfs_info() {
@@ -41,6 +42,15 @@ name=cloudstack
 baseurl=http://packages.shapeblue.com/cloudstack/upstream/centos/$VERSION
 enabled=1
 gpgcheck=0" > /etc/yum.repos.d/CloudStack.repo
+     if [ $VERSION == "4.9" ]; then
+	     echo "[mysql-connectors-community]
+name=MySQL Community connectors
+baseurl=http://repo.mysql.com/yum/mysql-connectors-community/el/$RELEASERVER/$BASESEARCH/
+enabled=1
+gpgcheck=1" > /etc/yum.repos.d/mysql.repo
+	rpm --import http://repo.mysql.com/RPM-GPG-KEY-mysql
+	yum install mysql-connector-python -y
+	fi
      yum install ntp wget -y
      service ntpd start
      chkconfig ntpd on
@@ -127,11 +137,17 @@ DNS1=$DNS1" > /etc/sysconfig/network-scripts/ifcfg-eth0
  echo "$IPADRR	$HOSTNAME	$HOSTNAME.$DOMAIN" >> /etc/hosts
  echo "search $DOMAIN
 nameserver $DNS1" > /etc/resolv.conf
- service iptables stop
- chkconfig iptables off
  service network restart
 }
-
+function set_acl(){
+	if [ $RELEASERVER -lt 7 ]; then
+		service iptables stop
+		chkconfig iptables off
+	else
+		 systemctl stop firewalld 
+		 systemctl disable firewalld
+	fi
+}
 function install_nfs() {
      yum install nfs-utils -y
      service rpcbind start
@@ -155,6 +171,7 @@ STATD_OUTGOING_PORT=2020" >> /etc/sysconfig/nfs
     get_nfs_info
     add_ssh_public_key
     set_ip
+    set_acl
     install_common
     install_nfs
     install_management
